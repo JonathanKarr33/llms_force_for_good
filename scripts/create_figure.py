@@ -16,6 +16,7 @@ SCRIPT_DIR = Path(__file__).parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 DATA_PATH = PROJECT_ROOT / "data" / "data.csv"
 OUTPUT_PATH = PROJECT_ROOT / "output"
+OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 
 # Column indices
 COL_GRADE = 3
@@ -23,9 +24,11 @@ COL_SCHOOL = 22
 COL_PERSONAL = 23
 COL_FORCE_BEGIN = 10
 COL_FORCE_END = 27
+COL_COLLEGE = 5
 COL_UNDERSTAND_POLICIES = 18
 COL_PROFS_UNDERSTAND = 19
 COL_LLM_USES = 9
+COL_LLMS_USED_PAST_MONTH = 8
 
 
 def load_data():
@@ -47,6 +50,46 @@ def safe_int(val, default=None):
         return int(val)
     except (ValueError, TypeError):
         return default
+
+
+def row_force_rating(row):
+    """Mean of beginning + end 'force for good' rating when both valid; else whichever exists (matches analysis script)."""
+    fb = safe_int(row[COL_FORCE_BEGIN]) if len(row) > COL_FORCE_BEGIN else None
+    fe = safe_int(row[COL_FORCE_END]) if len(row) > COL_FORCE_END else None
+    if fb and fe and 1 <= fb <= 5 and 1 <= fe <= 5:
+        return (fb + fe) / 2
+    if fe and 1 <= fe <= 5:
+        return fe
+    if fb and 1 <= fb <= 5:
+        return fb
+    return None
+
+
+def mean_force_for_college(rows, college_name):
+    vals = [
+        row_force_rating(r)
+        for r in rows
+        if len(r) > COL_COLLEGE and str(r[COL_COLLEGE]).strip() == college_name and row_force_rating(r) is not None
+    ]
+    return sum(vals) / len(vals) if vals else None
+
+
+LLM_NONE_LABEL = "N/A"
+
+
+def normalize_llm_product_name(raw):
+    """Normalize free-text LLM names from the past-month column; return None to skip."""
+    name = raw.strip()
+    if not name:
+        return None
+    low = name.lower()
+    if "have not used" in low:
+        return LLM_NONE_LABEL
+    if "google ai" in low:
+        return "Gemini"
+    if "copilot" in low:
+        return "Copilot"
+    return name
 
 
 def create_figure():
@@ -166,6 +209,69 @@ def create_figure():
     return out_path
 
 
+def create_llms_used_chart():
+    """Horizontal bar chart: which LLMs were used in the past month, plus 'N/A', >=10% only."""
+    from collections import Counter
+
+    rows = load_data()
+    n = len(rows)
+    counts = Counter()
+    for r in rows:
+        if len(r) <= COL_LLMS_USED_PAST_MONTH:
+            continue
+        seen = set()
+        for item in r[COL_LLMS_USED_PAST_MONTH].split(","):
+            u = normalize_llm_product_name(item)
+            if u:
+                seen.add(u)
+        if LLM_NONE_LABEL in seen:
+            seen = {LLM_NONE_LABEL}
+        for u in seen:
+            counts[u] += 1
+
+    filtered = [(k, v) for k, v in counts.items() if 100 * v / n >= 10]
+    filtered.sort(key=lambda x: x[1])
+    labels = [x[0] for x in filtered]
+    vals = [x[1] for x in filtered]
+    pcts = [100 * v / n for v in vals]
+
+    COLORS = {
+        "navy": "#0C2340",
+        "gold": "#C99700",
+        "light_gold": "#E8C547",
+        "slate": "#4A5F7F",
+        "cream": "#F5F0E6",
+    }
+
+    fig_h = max(3.0, 0.55 * len(labels) + 1.5)
+    fig, ax = plt.subplots(figsize=(10, fig_h))
+    fig.patch.set_facecolor(COLORS["navy"])
+    y_pos = range(len(labels))
+    bars = ax.barh(y_pos, vals, height=0.5, color=COLORS["gold"], edgecolor=COLORS["light_gold"], linewidth=1.2)
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(labels, color=COLORS["cream"], fontsize=11)
+    ax.set_xlabel("Number of respondents", color=COLORS["cream"])
+    ax.set_xlim(0, n)
+    ticks = [0, 10, 20, 30, 40, 50]
+    if n not in ticks:
+        ticks.append(n)
+        ticks.sort()
+    ax.set_xticks(ticks)
+    ax.set_title("Which LLMs Have Notre Dame Students Used in the Past Month?", color=COLORS["gold"], fontsize=14)
+    ax.set_facecolor(COLORS["navy"])
+    ax.spines[:].set_color(COLORS["slate"])
+    ax.tick_params(colors=COLORS["cream"])
+    ax.bar_label(bars, labels=[f"{v} ({p:.0f}%)" for v, p in zip(vals, pcts)], color=COLORS["cream"], fontsize=10, padding=12)
+
+    plt.tight_layout()
+    fig.text(0.5, -0.02, ">10%", ha="center", fontsize=10, color=COLORS["slate"])
+    out_path = OUTPUT_PATH / "llm_models_chart.png"
+    plt.savefig(out_path, dpi=150, bbox_inches="tight", facecolor=COLORS["navy"], pad_inches=0.35)
+    plt.close()
+    print(f"Figure saved to {out_path}")
+    return out_path
+
+
 def create_uses_chart():
     """Bar chart of what people use LLMs for, ranked highest to lowest, >=10% only."""
     rows = load_data()
@@ -262,6 +368,13 @@ def create_principle_practice_figure():
     grade_order = ["FR", "SO", "JR", "SR", "GR"]
     grade_str = "  ".join(f"{k}={grades.get(k, 0)}" for k in grade_order)
 
+    all_force = [v for v in (row_force_rating(r) for r in rows) if v is not None]
+    mean_force = sum(all_force) / len(all_force) if all_force else 0
+    eng_force = mean_force_for_college(rows, "College of Engineering")
+    arts_force = mean_force_for_college(rows, "College of Arts & Letters")
+    eng_label = f"{eng_force:.1f}" if eng_force is not None else "—"
+    arts_label = f"{arts_force:.1f}" if arts_force is not None else "—"
+
     COLORS = {
         "navy": "#0C2340",
         "gold": "#C99700",
@@ -270,53 +383,71 @@ def create_principle_practice_figure():
         "cream": "#F5F0E6",
     }
 
-    fig, ax = plt.subplots(figsize=(7, 5.5))
+    fig, ax = plt.subplots(figsize=(7, 6.85))
     fig.patch.set_facecolor(COLORS["navy"])
     ax.set_facecolor(COLORS["navy"])
     ax.set_xlim(0, 10)
-    ax.set_ylim(0, 8)
+    ax.set_ylim(0, 9.5)
     ax.axis("off")
 
     # Title — bold, distinctive
-    ax.text(5, 7.6, "Principle vs Practice", color=COLORS["gold"], fontsize=24, fontweight="bold", ha="center", va="top")
-    ax.text(5, 7.0, "Notre Dame Students' Views on LLMs", color=COLORS["light_gold"], fontsize=14, fontweight="bold", ha="center", va="top")
+    ax.text(5, 8.85, "Principle vs Practice", color=COLORS["gold"], fontsize=24, fontweight="bold", ha="center", va="top")
+    ax.text(5, 8.1, "Notre Dame Students' Views on LLMs", color=COLORS["light_gold"], fontsize=14, fontweight="bold", ha="center", va="top")
 
     # Lightning-bolt divider (starts below title, jagged for "vs" effect)
-    zig_y = np.linspace(6.3, 0.6, 12)
+    zig_y = np.linspace(7.35, 2.05, 12)
     zig_x = 5 + 0.4 * np.array([0, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, 0])
     ax.plot(zig_x, zig_y, color=COLORS["light_gold"], linewidth=1.5, alpha=0.7, zorder=0)
 
     # Left column: BELIEF
-    ax.text(2.25, 6.0, "BELIEF", color=COLORS["cream"], fontsize=11, fontweight="bold", ha="center", va="top")
-    ax.text(2.25, 4.9, f"{pct_ethical:.0f}%", color=COLORS["light_gold"], fontsize=42, fontweight="bold", ha="center", va="center")
-    ax.text(2.25, 3.8, "Believe LLMs Can Be Used\nEthically (Catholic Mission)", color=COLORS["cream"], fontsize=11, ha="center", va="center", linespacing=1.4)
+    ax.text(2.25, 7.05, "BELIEF", color=COLORS["cream"], fontsize=11, fontweight="bold", ha="center", va="top")
+    ax.text(2.25, 5.95, f"{pct_ethical:.0f}%", color=COLORS["light_gold"], fontsize=42, fontweight="bold", ha="center", va="center")
+    ax.text(2.25, 4.85, "Believe LLMs Can Be Used\nEthically (Catholic Mission)", color=COLORS["cream"], fontsize=11, ha="center", va="center", linespacing=1.4)
 
     # Right column: BEHAVIOR
-    ax.text(7.75, 6.0, "BEHAVIOR", color=COLORS["cream"], fontsize=11, fontweight="bold", ha="center", va="top")
-    ax.text(7.75, 5.4, f"{pct_misuse:.0f}%", color=COLORS["gold"], fontsize=26, fontweight="bold", ha="center", va="center")
-    ax.text(7.75, 4.9, "Admit Misuse for School", color=COLORS["cream"], fontsize=11, ha="center", va="center")
-    ax.text(7.75, 4.0, f"{pct_personal:.0f}%", color=COLORS["gold"], fontsize=26, fontweight="bold", ha="center", va="center")
-    ax.text(7.75, 3.5, "Admit Misuse for Personal", color=COLORS["cream"], fontsize=11, ha="center", va="center")
+    ax.text(7.75, 7.05, "BEHAVIOR", color=COLORS["cream"], fontsize=11, fontweight="bold", ha="center", va="top")
+    ax.text(7.75, 6.45, f"{pct_misuse:.0f}%", color=COLORS["gold"], fontsize=26, fontweight="bold", ha="center", va="center")
+    ax.text(7.75, 5.95, "Admit School Misuse", color=COLORS["cream"], fontsize=11, ha="center", va="center")
+    ax.text(7.75, 5.05, f"{pct_personal:.0f}%", color=COLORS["gold"], fontsize=26, fontweight="bold", ha="center", va="center")
+    ax.text(7.75, 4.55, "Admit Personal Misuse", color=COLORS["cream"], fontsize=11, ha="center", va="center")
 
-    # Bottom: Understanding — Title Case
-    ax.axhline(y=2.4, color=COLORS["light_gold"], linewidth=0.5, alpha=0.4, xmin=0.1, xmax=0.9)
-    ax.text(2.5, 1.7, "I Understand My Professors'\nAI Policies", color=COLORS["cream"], fontsize=10, ha="center", va="center", linespacing=1.3)
-    ax.text(2.5, 0.9, f"{avg_stud:.1f} / 5", color=COLORS["gold"], fontsize=13, fontweight="bold", ha="center", va="center")
-    ax.text(7.5, 1.7, "Professors Understand How\nStudents Use AI", color=COLORS["cream"], fontsize=10, ha="center", va="center", linespacing=1.3)
-    ax.text(7.5, 0.9, f"{avg_prof:.1f} / 5", color=COLORS["gold"], fontsize=13, fontweight="bold", ha="center", va="center")
+    # Understanding — Title Case
+    ax.axhline(y=3.75, color=COLORS["light_gold"], linewidth=0.5, alpha=0.4, xmin=0.1, xmax=0.9)
+    ax.text(2.5, 3.05, "I Understand My Professors'\nAI Policies", color=COLORS["cream"], fontsize=10, ha="center", va="center", linespacing=1.3)
+    ax.text(2.5, 2.3, f"{avg_stud:.1f} / 5", color=COLORS["gold"], fontsize=13, fontweight="bold", ha="center", va="center")
+    ax.text(7.5, 3.05, "Professors Understand How\nStudents Use AI", color=COLORS["cream"], fontsize=10, ha="center", va="center", linespacing=1.3)
+    ax.text(7.5, 2.3, f"{avg_prof:.1f} / 5", color=COLORS["gold"], fontsize=13, fontweight="bold", ha="center", va="center")
 
-    # Sample info at bottom — more spacing above, closer to bottom
-    ax.text(5, 0.15, f"n={n}:  {grade_str}", color=COLORS["cream"], fontsize=12, ha="center", va="center")
+    # Force for good — Engineering vs Arts & Letters (exact college labels in data)
+    ax.axhline(y=1.88, color=COLORS["light_gold"], linewidth=0.5, alpha=0.4, xmin=0.1, xmax=0.9)
+    ax.text(
+        5,
+        1.55,
+        f"Force for Good (1-5): M={mean_force:.1f}",
+        color=COLORS["gold"],
+        fontsize=13,
+        fontweight="bold",
+        ha="center",
+        va="center",
+    )
+    ax.text(2.25, 1.1, "Engineering", color=COLORS["cream"], fontsize=11, ha="center", va="center")
+    ax.text(2.25, 0.62, eng_label, color=COLORS["gold"], fontsize=16, fontweight="bold", ha="center", va="center")
+    ax.text(7.75, 1.1, "Arts & Letters", color=COLORS["cream"], fontsize=11, ha="center", va="center")
+    ax.text(7.75, 0.62, arts_label, color=COLORS["gold"], fontsize=16, fontweight="bold", ha="center", va="center")
+
+    # Sample info at bottom
+    ax.text(5, 0.12, f"n={n}:  {grade_str}", color=COLORS["cream"], fontsize=12, ha="center", va="center")
 
     plt.tight_layout(pad=0.8)
     out_path = OUTPUT_PATH / "principle_practice_figure.png"
     plt.savefig(out_path, dpi=150, bbox_inches="tight", facecolor=COLORS["navy"])
     plt.close()
     print(f"Figure saved to {out_path}")
-    return out_path
+    return OUTPUT_PATH / "principle_practice_figure.png"
 
 
 if __name__ == "__main__":
     create_figure()
+    create_llms_used_chart()
     create_uses_chart()
     create_principle_practice_figure()

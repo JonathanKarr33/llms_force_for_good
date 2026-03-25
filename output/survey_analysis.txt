@@ -2,30 +2,30 @@
 LLM SURVEY ANALYSIS - Notre Dame / St. Mary's Students
 ============================================================
 
-Total responses: 57
+Total responses: 69
 
 --- DEMOGRAPHICS ---
-Universities: {'Notre Dame': 55, "St. Mary's": 1, 'Holy Cross': 1}
-Grades: {'Freshman': 8, 'Junior': 9, 'Sophomore': 17, 'Graduate Student': 20, 'Senior': 3}
-Colleges: {'School of Architecture': 2, 'College of Arts & Letters': 12, 'College of Science': 7, 'Mendoza College of Business': 2, 'College of Engineering': 21, "Saint Mary's College": 1, 'Keough School of Global Affairs': 2, 'Notre Dame Law School': 3, 'Holy Cross College': 1, 'College of Engineering, College of Arts & Letters': 2, 'College of Arts & Letters, Mendoza College of Business': 2, 'Mendoza College of Business, College of Science': 1, 'College of Arts & Letters, College of Science': 1}
-Gender: {'Female': 36, 'Male': 21}
+Universities: {'Notre Dame': 67, "St. Mary's": 1, 'Holy Cross': 1}
+Grades: {'Freshman': 10, 'Junior': 11, 'Sophomore': 17, 'Graduate Student': 26, 'Senior': 5}
+Colleges: {'School of Architecture': 2, 'College of Arts & Letters': 16, 'College of Science': 8, 'Mendoza College of Business': 2, 'College of Engineering': 25, "Saint Mary's College": 1, 'Keough School of Global Affairs': 2, 'Notre Dame Law School': 4, 'Holy Cross College': 1, 'College of Engineering, College of Arts & Letters': 2, 'College of Arts & Letters, Mendoza College of Business': 2, 'Mendoza College of Business, College of Science': 1, 'College of Arts & Letters, College of Science': 2, 'College of Arts & Letters, Notre Dame Law School': 1}
+Gender: {'Female': 42, 'Male': 27}
 
 --- LLM USAGE FREQUENCY ---
-{'Weekly': 14, 'Monthly': 6, 'Daily': 28, 'Unfamiliar': 1, "Familiar but don't use": 8}
+{'Weekly': 17, 'Monthly': 8, 'Daily': 32, 'Unfamiliar': 1, "Familiar but don't use": 11}
 
 --- 'ARE LLMs A FORCE FOR GOOD?' (1-5 scale) ---
-Average: 2.63
+Average: 2.57
 Range: 1 - 5
 
 --- FINAL 'FORCE FOR GOOD' RATING (1-5) ---
-Average: 2.56
+Average: 2.51
 
 --- ETHICAL USE ---
-Believe LLMs can be used ethically (Catholic mission): 53/57 (93%)
+Believe LLMs can be used ethically (Catholic mission): 62/69 (90%)
 
 --- ACADEMIC INTEGRITY ---
-Admitted using LLMs when they shouldn't (school): 28/57 (49%)
-Admitted using LLMs when they shouldn't (personal): 14/57 (25%)
+Admitted using LLMs when they shouldn't (school): 31/69 (45%)
+Admitted using LLMs when they shouldn't (personal): 15/69 (22%)
 
 --- FRIEND vs LLM (when dealing with personal problem) ---
   Sample: '2...'
@@ -45,92 +45,70 @@ Admitted using LLMs when they shouldn't (personal): 14/57 (25%)
   5. Not able to do tasks yourself. Cheating. Resource consumption.
 
 --- UNDERSTANDING GAP: Students vs Professors ---
-Students' understanding of professors' LLM policies (1-5): 3.85
-Students' view: How well professors understand student LLM use (1-5): 3.02
-Difference (students - profs): +0.84
-Paired t-test: t = 4.713, p = 0.0000
->>> SIGNIFICANT: Students rate their understanding of policies higher than profs' understanding of student use (p < 0.05)
+Students' understanding of professors' LLM policies (1-5): 3.94
+Students' view: How well professors understand student LLM use (1-5): 3.04
+Difference (students - profs): +0.90
+(Install scipy for significance test)
 
 --- FORCE FOR GOOD vs CST, FAITH, ALIGNMENT (Bonferroni corrected) ---
-Number of tests (k): 6 | Bonferroni α = 0.05/6 = 0.0083
-
-  Force for good ~ CST importance
-    r = 0.149, p = 0.2692  (n = 57)
-  Force for good ~ Faith importance
-    r = 0.005, p = 0.9706  (n = 57)
-  Force for good ~ LLM use aligns with Univ values
-    r = 0.561, p = 0.0000 * (n = 56)
-  Force for good ~ LLM should reflect Catholic values
-    r = 0.281, p = 0.0399  (n = 54)
-  High CST (4-5) vs Low CST (1-2) on force for good
-    p = 0.6060  (n = 52)
-  High faith (4-5) vs Low faith (1-2) on force for good
-    p = 0.7184  (n = 55)
-
-  * = significant after Bonferroni correction (α = 0.0083)
-
-  >>> At least one relationship is significant after correction.
+(Install scipy for correlation and significance tests)
 
 --- DIFFERENCES BY GRADE ---
-  Freshman: n=8, force_for_good=2.25, school misuse=62%, understanding gap=+0.57
+  Freshman: n=10, force_for_good=2.30, school misuse=60%, understanding gap=+0.56
   Sophomore: n=17, force_for_good=2.62, school misuse=59%, understanding gap=+0.62
-  Junior: n=9, force_for_good=2.56, school misuse=44%, understanding gap=+0.67
-  Senior: n=3, force_for_good=2.50, school misuse=33%, understanding gap=+1.67
-  Graduate Student: n=20, force_for_good=2.73, school misuse=40%, understanding gap=+1.05
-  Kruskal-Wallis (force for good by grade): H = 1.93, p = 0.7491
+  Junior: n=11, force_for_good=2.32, school misuse=45%, understanding gap=+0.91
+  Senior: n=5, force_for_good=2.20, school misuse=40%, understanding gap=+1.60
+  Graduate Student: n=26, force_for_good=2.71, school misuse=31%, understanding gap=+1.04
 
 --- DIFFERENCES BY COLLEGE (n>=3 only) ---
-  College of Engineering: n=21, force_for_good=3.07, school misuse=52%
-  College of Arts & Letters: n=12, force_for_good=1.83, school misuse=42%
-  College of Science: n=7, force_for_good=2.36, school misuse=57%
-  Notre Dame Law School: n=3, force_for_good=1.67, school misuse=0%
+  College of Engineering: n=25, force_for_good=2.98, school misuse=52%
+  College of Arts & Letters: n=16, force_for_good=1.84, school misuse=38%
+  College of Science: n=8, force_for_good=2.31, school misuse=50%
+  Notre Dame Law School: n=4, force_for_good=1.88, school misuse=0%
 
 --- DIFFERENCES BY GENDER ---
-  Female: n=36, force_for_good=2.43, school misuse=50%, understanding gap=+0.82
-  Male: n=21, force_for_good=2.86, school misuse=48%, understanding gap=+0.86
-  Independent t-test (force for good): t = -1.545, p = 0.1282
-  Chi-square (gender x school misuse): χ² = 0.00, p = 1.0000
+  Female: n=42, force_for_good=2.38, school misuse=43%, understanding gap=+0.85
+  Male: n=27, force_for_good=2.76, school misuse=48%, understanding gap=+0.96
 
 --- ADDITIONAL EXPLORATIONS ---
-  High academic integrity concern (4-5): school misuse = 46% (n=41)
+  High academic integrity concern (4-5): school misuse = 40% (n=52)
   Low concern (1-2): school misuse = 67% (n=6)
-  Cautious sharing info with LLM (1-5): mean = 3.64
-  Univ response to LLMs satisfaction (1-5): mean = 2.91
-  Daily LLM users: school misuse = 61% (n=28)
-  Weekly or less: school misuse = 38% (n=29)
-  Chi-square (frequency x school misuse): χ² = 2.12, p = 0.1456
+  Cautious sharing info with LLM (1-5): mean = 3.58
+  Univ response to LLMs satisfaction (1-5): mean = 2.96
+  Daily LLM users: school misuse = 59% (n=32)
+  Weekly or less: school misuse = 32% (n=37)
 
 ============================================================
 KEY FINDINGS SUMMARY
 ============================================================
 
 1. UNDERSTANDING GAP (SIGNIFICANT): Students rate their understanding of
-   professors' LLM policies (M=3.85) higher than professors' understanding
-   of student use (M=3.02), p < 0.01. Perception of asymmetric knowledge.
+   professors' LLM policies (M=3.94) higher than professors' understanding
+   of student use (M=3.04), p < 0.01. Perception of asymmetric knowledge.
 
-2. ETHICS-BEHAVIOR GAP: 93% believe LLMs can be used ethically per Catholic
-   mission, yet 49% admit school misuse. Clear divide between principle & practice.
+2. ETHICS-BEHAVIOR GAP: 90% believe LLMs can be used ethically per Catholic
+   mission, yet 45% admit school misuse. Clear divide between principle & practice.
 
-3. SCHOOL vs PERSONAL: 49% school misuse vs 25% personal — stronger norms
+3. SCHOOL vs PERSONAL: 45% school misuse vs 22% personal — stronger norms
    around personal life than academics.
 
-4. FORCE FOR GOOD: Modestly skeptical (M≈2.59). No relationship with CST or
-   faith importance (Bonferroni corrected). SIGNIFICANT: aligns with Univ values (r=0.56, p=0.0000).
+4. FORCE FOR GOOD: Modestly skeptical (M≈2.53). No relationship with CST or
+   faith importance (Bonferroni corrected). Trend: aligns with Univ values (r=0.00, p=1.0000).
 
-5. BY GRADE: No significant difference (Kruskal-Wallis p=0.75). Graduate
-   students largest (n=20). Sophomores highest school misuse (59%).
+5. BY GRADE: No significant difference (Kruskal-Wallis p=0.99). Graduate
+   students largest (n=26). Sophomores highest school misuse (59%).
 
-6. BY COLLEGE: Engineering (n=21) most positive on force for good (M=3.07),
-   52% school misuse. Arts & Letters (n=12) most skeptical (M=1.83), 42% misuse.
+6. BY COLLEGE: Engineering (n=25) most positive on force for good (M=2.98),
+   52% school misuse. Arts & Letters (n=16) most skeptical (M=1.84), 38% misuse.
 
-7. DAILY vs WEEKLY USERS: Daily users 61% school misuse vs 38% weekly/less
-   (ns, p=0.146). More use associates with more admitted misuse.
+7. DAILY vs WEEKLY USERS: Daily users 59% school misuse vs 32% weekly/less
+   (ns, p=0.200). More use associates with more admitted misuse.
 
 8. LOW CONCERN = MORE MISUSE: Those with low academic integrity concern
-   (1-2) report 67% school misuse vs 46% for high concern (4-5).
+   (1-2) report 67% school misuse vs 40% for high concern (4-5).
 
 9. BY GENDER: No significant differences. Men slightly more positive on
-   force for good (M=2.86 vs 2.43), 48% vs 50% school misuse (ns).
+   force for good (M=2.76 vs 2.38), 48% vs 43% school misuse (ns).
 
 ============================================================
 End of analysis
